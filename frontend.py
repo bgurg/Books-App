@@ -37,14 +37,13 @@ def clear_entries():
 def get_selection(event):
     global selection
     try:
-        index = list1.curselection()[0]
-        selection = list1.get(index)
-        id, title, author, year, isbn = selection
         clear_entries()
-        e1.insert(END, title)
-        e2.insert(END, author)
-        e3.insert(END, year)
-        e4.insert(END, isbn)
+        index = list1.curselection()[0] # id
+        selection = list1.get(index)
+        e1.insert(END, selection[1]) # title
+        e2.insert(END, selection[2]) # author
+        e3.insert(END, selection[3]) # year
+        e4.insert(END, selection[4]) # isbn
     except:
         pass
         
