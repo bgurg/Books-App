@@ -1,133 +1,132 @@
 from tkinter import Tk, Label, Entry, StringVar, Listbox, Scrollbar, Button, messagebox, N, S, W, END
-import backend as backend
+from backend import Database
 
-def view_command():
-    clear_entries()
-    list1.delete(0,END)
-    for item in backend.view_all():
-        list1.insert(END, item)
+class Window:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Book App")
 
-def search_command():
-    results = backend.search(title=title_text.get(),
-                            author=author_text.get(),
-                            year=year_text.get(),
-                            isbn=isbn_text.get(),
-                            strict=False)
-    if len(results) == 0:
-        messagebox.showinfo("Search", "No matches found")
-    else:
-        list1.delete(0,END)
-        for item in results:
-            list1.insert(END, item)
+        self.l1=Label(self.root, text='Title')
+        self.l1.grid(row=0,column=0)
+
+        self.l2=Label(self.root, text='Author')
+        self.l2.grid(row=0,column=1)
+
+        self.l3=Label(self.root, text='Year')
+        self.l3.grid(row=0,column=2)
+
+        self.l4=Label(self.root, text='ISBN')
+        self.l4.grid(row=0,column=3)
+
+        self.title_text=StringVar()
+        self.e1=Entry(self.root,textvariable=self.title_text)
+        self.e1.grid(row=1,column=0)
+
+        self.author_text=StringVar()
+        self.e2=Entry(self.root,textvariable=self.author_text)
+        self.e2.grid(row=1,column=1)
+
+        self.year_text=StringVar()
+        self.e3=Entry(self.root,textvariable=self.year_text)
+        self.e3.grid(row=1,column=2)
+
+        self.isbn_text=StringVar()
+        self.e4=Entry(self.root,textvariable=self.isbn_text)
+        self.e4.grid(row=1,column=3, padx=5, pady=5)
+
+        self.list1 = Listbox(self.root, height=12, width=65)
+        self.list1.grid(row=2, rowspan=6, padx=5, pady=5, column=0, columnspan=3)
+
+        self.list1.bind('<<ListboxSelect>>', self.get_selection)
+
+        self.sb1 = Scrollbar(self.root)
+        self.sb1.grid(row=2, rowspan=6, column=3, sticky=N+S+W)
+
+        self.list1.configure(yscrollcommand=self.sb1.set)
+        self.sb1.configure(command=self.list1.yview)
+
+        self.b1 = Button(self.root, text="Clear", width=12, command=self.view_command)
+        self.b1.grid(row=2, column=3)
+
+        self.b2 = Button(self.root, text="Search", width=12, command=self.search_command)
+        self.b2.grid(row=3, column=3)
+
+        self.b3 = Button(self.root, text="Add", width=12, command=self.add_command)
+        self.b3.grid(row=4, column=3)
+
+        self.b4 = Button(self.root, text="Update", width=12, command=self.update_command)
+        self.b4.grid(row=5, column=3)
+
+        self.b5 = Button(self.root, text="Delete", width=12, command=self.delete_command)
+        self.b5.grid(row=6, column=3)
+
+        self.view_command()
+
+    def view_command(self):
+        self.clear_entries()
+        self.list1.delete(0,END)
+        for item in books.view_all():
+            self.list1.insert(END, item)
+
+    def search_command(self):
+        results = books.search(title  = self.title_text.get(),
+                               author = self.author_text.get(),
+                               year   = self.year_text.get(),
+                               isbn   = self.isbn_text.get(),
+                               strict = False)
+        if len(results) == 0:
+            messagebox.showinfo("Search", "No matches found")
+        else:
+            self.list1.delete(0,END)
+            for item in results:
+                self.list1.insert(END, item)
+            
+    def add_command(self):
+        self.list1.delete(0,END)
+        books.add_entry(title  = self.title_text.get(),
+                        author = self.author_text.get(),
+                        year   = self.year_text.get(),
+                        isbn   = self.isbn_text.get())
+        self.view_command()
+
+    def clear_entries(self):
+        self.e1.delete(0,END)
+        self.e2.delete(0,END)
+        self.e3.delete(0,END)
+        self.e4.delete(0,END)
+
+    def get_selection(self, event):
+        try:
+            self.clear_entries()
+            index = self.list1.curselection()[0] # id
+            self.selection = self.list1.get(index)
+            self.e1.insert(END, self.selection[1]) # title
+            self.e2.insert(END, self.selection[2]) # author
+            self.e3.insert(END, self.selection[3]) # year
+            self.e4.insert(END, self.selection[4]) # isbn
+        except:
+            pass
+            
+    def update_command(self):
+        try:
+            books.update(self.selection[0],
+                         self.title_text.get(),
+                         self.author_text.get(),
+                         self.year_text.get(),
+                         self.isbn_text.get())
+        except:
+            pass
+        self.view_command()
         
-def add_command():
-    list1.delete(0,END)
-    backend.add_entry(title=title_text.get(),
-                      author=author_text.get(),
-                      year=year_text.get(),
-                      isbn=isbn_text.get())
-    view_command()
-
-def clear_entries():
-    e1.delete(0,END)
-    e2.delete(0,END)
-    e3.delete(0,END)
-    e4.delete(0,END)
-
-def get_selection(event):
-    global selection
-    try:
-        clear_entries()
-        index = list1.curselection()[0] # id
-        selection = list1.get(index)
-        e1.insert(END, selection[1]) # title
-        e2.insert(END, selection[2]) # author
-        e3.insert(END, selection[3]) # year
-        e4.insert(END, selection[4]) # isbn
-    except:
-        pass
-        
-def update_command():
-    try:
-        backend.update(selection[0],
-                    title_text.get(),
-                    author_text.get(),
-                    year_text.get(),
-                    isbn_text.get())
-    except:
-        pass
-    view_command()
-    
-def delete_command():
-    try:
-        backend.delete(selection[0])
-    except:
-        pass
-    view_command()
-
-#def close_command():
-#    exit()
+    def delete_command(self):
+        try:
+            books.delete(self.selection[0])
+        except:
+            pass
+        self.view_command()
 
 if __name__ == "__main__":
-    window = Tk()
-    window.title("Book App")
-
-    l1=Label(window, text='Title')
-    l1.grid(row=0,column=0)
-
-    l2=Label(window, text='Author')
-    l2.grid(row=0,column=1)
-
-    l3=Label(window, text='Year')
-    l3.grid(row=0,column=2)
-
-    l4=Label(window, text='ISBN')
-    l4.grid(row=0,column=3)
-
-    title_text=StringVar()
-    e1=Entry(window,textvariable=title_text)
-    e1.grid(row=1,column=0)
-
-    author_text=StringVar()
-    e2=Entry(window,textvariable=author_text)
-    e2.grid(row=1,column=1)
-
-    year_text=StringVar()
-    e3=Entry(window,textvariable=year_text)
-    e3.grid(row=1,column=2)
-
-    isbn_text=StringVar()
-    e4=Entry(window,textvariable=isbn_text)
-    e4.grid(row=1,column=3, padx=5, pady=5)
-
-    list1 = Listbox(window, height=12, width=65)
-    list1.grid(row=2, rowspan=6, padx=5, pady=5, column=0, columnspan=3)
-
-    list1.bind('<<ListboxSelect>>', get_selection)
-
-    sb1 = Scrollbar(window)
-    sb1.grid(row=2, rowspan=6, column=3, sticky=N+S+W)
-
-    list1.configure(yscrollcommand=sb1.set)
-    sb1.configure(command=list1.yview)
-
-    b1 = Button(window, text="Clear", width=12, command=view_command)
-    b1.grid(row=2, column=3)
-
-    b2 = Button(window, text="Search", width=12, command=search_command)
-    b2.grid(row=3, column=3)
-
-    b3 = Button(window, text="Add", width=12, command=add_command)
-    b3.grid(row=4, column=3)
-
-    b4 = Button(window, text="Update", width=12, command=update_command)
-    b4.grid(row=5, column=3)
-
-    b5 = Button(window, text="Delete", width=12, command=delete_command)
-    b5.grid(row=6, column=3)
-
- #   b6 = Button(window, text="Close", width=12, command=close_command)
- #   b6.grid(row=7, column=3)
-
-    view_command()
-    window.mainloop()
+    books = Database('books.db')
+    root = Tk()
+    main_window = Window(root)
+    root.mainloop()
